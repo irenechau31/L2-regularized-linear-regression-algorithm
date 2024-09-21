@@ -26,12 +26,12 @@ def split_train_1000():
 split_train_1000() #run function
 
 datasets={
-    'dataset 1': ('train-100-10.csv', 'test-100-10.csv'),
-    'dataset 2': ('train-100-100.csv', 'test-100-100.csv'),
-    'dataset 3': ('train-1000-100.csv', 'test-1000-100.csv'),
-    'dataset 4': ('train-50(1000)-100.csv', 'test-1000-100.csv'),
-    'dataset 5': ('train-100(1000)-100.csv', 'test-1000-100.csv'),
-    'dataset 6': ('train-150(1000)-100.csv', 'test-1000-100.csv')
+    'dataset 1 (100-10)': ('train-100-10.csv', 'test-100-10.csv'),
+    'dataset 2 (100-100)': ('train-100-100.csv', 'test-100-100.csv'),
+    'dataset 3 (1000-100)': ('train-1000-100.csv', 'test-1000-100.csv'),
+    'dataset 4 [50(1000)-100]': ('train-50(1000)-100.csv', 'test-1000-100.csv'),
+    'dataset 5 [100(1000)-100]': ('train-100(1000)-100.csv', 'test-1000-100.csv'),
+    'dataset 6 [150(1000)-100]': ('train-150(1000)-100.csv', 'test-1000-100.csv')
     }
 def preprocesssing_data(train_file, test_file):
     # Split data into features X and target y
@@ -69,7 +69,6 @@ def L2_ridge_regression(x,y,lambd):
     I=np.eye(n)
     print("x shape:", x.shape)
     print("y shape:", y.shape)
-    print("lambda:", lambd)
     print("I shape:", I.shape)
     # closed-form solution for L2
     w=np.linalg.inv(x.T@x+lambd*I)@x.T@y #one weight vector for the whole dataset of X features
@@ -77,31 +76,53 @@ def L2_ridge_regression(x,y,lambd):
     return w
 
 def MSE(x,y,w):
-        y_predictions = x @ w
-        mse = np.mean((y_predictions - y) ** 2)
-        return mse
+    y_predictions = x @ w
+    mse = np.mean((y_predictions - y) ** 2)
+    return mse
+    
+def plot_mse_lambd(datasets, lambdas_range):
 
-for dataset, (train_file, test_file) in datasets.items():
-    x_train, y_train, x_test, y_test=preprocesssing_data(train_file, test_file)
-
-    lambdas_list=[]
-    mse_train_list=[]
-    mse_test_list=[]
-    for lambd in range (0,151):
-        w=L2_ridge_regression(x_train,y_train,lambd)
+    for dataset, (train_file, test_file) in datasets.items():
+        x_train, y_train, x_test, y_test=preprocesssing_data(train_file, test_file)
+    
+        lambdas_list=[]
+        mse_train_list=[]
+        mse_test_list=[]
+        for lambd in lambdas_range:
+            w=L2_ridge_regression(x_train,y_train,lambd)
+            
+            mse_train = MSE(x_train, y_train, w)
+            mse_test = MSE(x_test, y_test, w)
         
-        lambdas_list.append(lambd)
-        mse_train_list.append(MSE(x_train,y_train,w))
-        mse_test_list.append(MSE(x_test,y_test,w))
-    plt.plot(lambdas_list, mse_train_list, label=f'Training MSE - {dataset}', marker='o', color='blue')
-    plt.plot(lambdas_list, mse_test_list, label=f'Testing MSE - {dataset}', marker='x', color='red')
-    plt.xlabel('Lambda Values')
-    plt.ylabel('MSE')
-    plt.title('MSE vs. Lambda for Training and Testing Data')
-    plt.grid(True)
-    plt.legend()
-    plt.show()
+            lambdas_list.append(lambd)
+            mse_train_list.append(mse_train)
+            mse_test_list.append(mse_test)
+            
+        # Print MSE values
+        print(f'Lambda: {lambd}, Training MSE: {mse_train}, Testing MSE: {mse_test}')
+        min_test_mse=min(mse_test_list)
+        best_lambd = lambdas_list[mse_test_list.index(min_test_mse)]
+        
+    
+        plt.plot(lambdas_list, mse_train_list, label=f'Training MSE - {dataset}', marker='o', color='blue')
+        plt.plot(lambdas_list, mse_test_list, label=f'Testing MSE - {dataset}', marker='x', color='red')
+        plt.plot(best_lambd, min_test_mse, 'bo') #bo is Blue circle
+        plt.annotate(f'min_test_mse: {min_test_mse:.2f}\nbest_lambd: {best_lambd}', xy = (best_lambd,min_test_mse))
+        plt.xlabel('Lambda Values')
+        plt.ylabel('MSE')
+        plt.title(f'MSE vs. Lambda {lambdas_range} for Training and Testing Data')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+plot_mse_lambd(datasets, range(0,151))
 
+dataset_2_4_5 = {
+    'dataset 2 (100-100)': datasets['dataset 2 (100-100)'],
+    'dataset 4 [50(1000)-100]' : datasets['dataset 4 [50(1000)-100]'],
+    'dataset 5 [100(1000)-100]': datasets['dataset 5 [100(1000)-100]']
+    }
+
+plot_mse_lambd(dataset_2_4_5, range(1,151))
 
     
     
